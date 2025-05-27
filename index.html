@@ -4,24 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geography Bee Pro</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const { Globe, RotateCcw, Settings, Target, Star, Check, X, Award, Zap } = lucide;
+
+        // Simple icons as text
+        const Globe = () => "🌍";
+        const Target = () => "🎯";
+        const Star = () => "⭐";
+        const Check = () => "✅";
+        const X = () => "❌";
+        const RotateCcw = () => "🔄";
+        const Zap = () => "⚡";
+        const Award = () => "🏆";
 
         const GeographyBeeApp = () => {
           const [currentQuestion, setCurrentQuestion] = useState('');
           const [currentAnswer, setCurrentAnswer] = useState('');
           const [isFlipped, setIsFlipped] = useState(false);
           const [difficulty, setDifficulty] = useState('medium');
-          const [showSettings, setShowSettings] = useState(false);
           const [questionCount, setQuestionCount] = useState(0);
           const [score, setScore] = useState({ correct: 0, total: 0 });
           const [lastAnswer, setLastAnswer] = useState(null);
@@ -53,59 +60,52 @@
               { name: 'South Korea', capital: 'Seoul', continent: 'Asia', flag: '🇰🇷', clue: 'K-pop and technology' }
             ],
             cities: [
-              { name: 'Tokyo', country: 'Japan', population: '37.4 million', region: 'Asia', clue: 'Largest metropolitan area' },
-              { name: 'New York City', country: 'United States', population: '8.3 million', region: 'North America', clue: 'The Big Apple' },
-              { name: 'London', country: 'United Kingdom', population: '9.0 million', region: 'Europe', clue: 'Big Ben and Thames' },
-              { name: 'Paris', country: 'France', population: '2.1 million', region: 'Europe', clue: 'City of Light' },
-              { name: 'Sydney', country: 'Australia', population: '5.3 million', region: 'Oceania', clue: 'Opera House' }
+              { name: 'Tokyo', country: 'Japan', clue: 'Largest metropolitan area' },
+              { name: 'New York City', country: 'United States', clue: 'The Big Apple' },
+              { name: 'London', country: 'United Kingdom', clue: 'Big Ben and Thames' },
+              { name: 'Paris', country: 'France', clue: 'City of Light' },
+              { name: 'Sydney', country: 'Australia', clue: 'Opera House' }
             ],
             features: [
-              { name: 'Mount Everest', type: 'Mountain', location: 'Nepal/China', description: 'Highest mountain in the world', rank: '1st tallest' },
-              { name: 'Amazon River', type: 'River', location: 'South America', description: 'Longest river in the world', rank: '1st longest' },
-              { name: 'Sahara Desert', type: 'Desert', location: 'North Africa', description: 'Largest hot desert', rank: '1st largest hot desert' },
-              { name: 'Pacific Ocean', type: 'Ocean', location: 'Global', description: 'Largest ocean', rank: '1st largest' }
-            ]
-          };
-
-          const questionTemplates = {
-            easy: [
-              (data) => data.capital ? { q: `What is the capital of ${data.name}?`, a: data.capital } : null,
-              (data) => data.continent ? { q: `On which continent is ${data.name} located?`, a: data.continent } : null,
-              (data) => data.flag ? { q: `FLAG_DISPLAY:${data.flag}:Which country does this flag represent?`, a: data.name } : null
-            ],
-            medium: [
-              (data) => data.clue ? { q: `Clue: ${data.clue}. What country is this?`, a: data.name } : null,
-              (data) => data.description ? { q: `What makes ${data.name} significant?`, a: data.description } : null
-            ],
-            hard: [
-              (data) => data.flag && data.clue ? { q: `FLAG_DISPLAY:${data.flag}:Clue: ${data.clue}. Which country?`, a: data.name } : null
+              { name: 'Mount Everest', type: 'Mountain', description: 'Highest mountain in the world' },
+              { name: 'Amazon River', type: 'River', description: 'Longest river in the world' },
+              { name: 'Sahara Desert', type: 'Desert', description: 'Largest hot desert' },
+              { name: 'Pacific Ocean', type: 'Ocean', description: 'Largest ocean' }
             ]
           };
 
           const generateQuestion = () => {
-            const templates = questionTemplates[difficulty];
             const allData = [...geoDatabase.countries, ...geoDatabase.cities, ...geoDatabase.features];
             
-            const rankingQuestions = [
-              { q: "What is the tallest mountain in the world?", a: "Mount Everest" },
-              { q: "What is the longest river in the world?", a: "Amazon River" },
-              { q: "What is the largest ocean in the world?", a: "Pacific Ocean" }
+            const questionTypes = [
+              // Capital questions
+              () => {
+                const country = geoDatabase.countries[Math.floor(Math.random() * geoDatabase.countries.length)];
+                return { q: `What is the capital of ${country.name}?`, a: country.capital };
+              },
+              // Flag questions
+              () => {
+                const country = geoDatabase.countries[Math.floor(Math.random() * geoDatabase.countries.length)];
+                return { q: `FLAG:${country.flag}:Which country does this flag represent?`, a: country.name };
+              },
+              // Clue questions
+              () => {
+                const country = geoDatabase.countries[Math.floor(Math.random() * geoDatabase.countries.length)];
+                return { q: `Clue: ${country.clue}. What country is this?`, a: country.name };
+              },
+              // Ranking questions
+              () => {
+                const rankings = [
+                  { q: "What is the tallest mountain in the world?", a: "Mount Everest" },
+                  { q: "What is the longest river in the world?", a: "Amazon River" },
+                  { q: "What is the largest ocean in the world?", a: "Pacific Ocean" }
+                ];
+                return rankings[Math.floor(Math.random() * rankings.length)];
+              }
             ];
             
-            let result = null;
-            const randomType = Math.random();
-            
-            if (randomType < 0.3) {
-              result = rankingQuestions[Math.floor(Math.random() * rankingQuestions.length)];
-            } else {
-              const template = templates[Math.floor(Math.random() * templates.length)];
-              const selectedData = allData[Math.floor(Math.random() * allData.length)];
-              result = template(selectedData);
-            }
-            
-            if (!result) {
-              result = { q: `What is the capital of ${geoDatabase.countries[0].name}?`, a: geoDatabase.countries[0].capital };
-            }
+            const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+            const result = questionType();
             
             setCurrentQuestion(result.q);
             setCurrentAnswer(result.a);
@@ -116,7 +116,11 @@
           const handleCardClick = () => setIsFlipped(!isFlipped);
 
           const markAnswer = (isCorrect) => {
-            setScore(prev => ({ correct: prev.correct + (isCorrect ? 1 : 0), total: prev.total + 1 }));
+            setScore(prev => ({ 
+              correct: prev.correct + (isCorrect ? 1 : 0), 
+              total: prev.total + 1 
+            }));
+            
             setLastAnswer(isCorrect);
             setShowScoreAnimation(true);
             
@@ -130,9 +134,6 @@
               setStreak(0);
             }
             
-            setCurrentQuestion('');
-            setCurrentAnswer('');
-            
             setTimeout(() => {
               setShowScoreAnimation(false);
               generateQuestion();
@@ -145,172 +146,181 @@
             setQuestionCount(0);
           };
 
-          const getScorePercentage = () => score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+          const getScorePercentage = () => 
+            score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
 
-          useEffect(() => { generateQuestion(); }, [difficulty]);
+          useEffect(() => { generateQuestion(); }, []);
 
-          return React.createElement('div', { 
-            className: "min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4" 
-          }, [
-            React.createElement('div', { className: "max-w-4xl mx-auto" }, [
-              React.createElement('div', { className: "text-center mb-8" }, [
-                React.createElement('h1', { 
-                  className: "text-5xl font-bold text-white mb-4 flex items-center justify-center gap-4" 
-                }, [
-                  React.createElement('div', { className: "p-3 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" }, 
-                    React.createElement(Globe, { className: "text-white", size: 40 })
-                  ),
-                  "Geography Bee Pro"
-                ]),
-                React.createElement('p', { className: "text-slate-300 text-lg" }, "Master the world's geography!")
-              ]),
-              
-              React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-4 mb-8" }, [
-                React.createElement('div', { className: "bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20" }, [
-                  React.createElement('div', { className: "flex items-center gap-3" }, [
-                    React.createElement('div', { className: "p-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg" },
-                      React.createElement(Target, { className: "text-white", size: 20 })
-                    ),
-                    React.createElement('div', {}, [
-                      React.createElement('p', { className: "text-slate-300 text-sm" }, "Score"),
-                      React.createElement('p', { className: "text-white text-xl font-bold" }, `${score.correct}/${score.total}`),
-                      React.createElement('p', { className: "text-green-400 text-xs" }, `${getScorePercentage()}% Accuracy`)
-                    ])
-                  ])
-                ]),
-                React.createElement('div', { className: "bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20" }, [
-                  React.createElement('div', { className: "flex items-center gap-3" }, [
-                    React.createElement('div', { className: "p-2 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg" },
-                      React.createElement(Zap, { className: "text-white", size: 20 })
-                    ),
-                    React.createElement('div', {}, [
-                      React.createElement('p', { className: "text-slate-300 text-sm" }, "Streak"),
-                      React.createElement('p', { className: "text-white text-xl font-bold" }, streak),
-                      React.createElement('p', { className: "text-orange-400 text-xs" }, `Best: ${bestStreak}`)
-                    ])
-                  ])
-                ]),
-                React.createElement('div', { className: "bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20" }, [
-                  React.createElement('div', { className: "flex items-center gap-3" }, [
-                    React.createElement('div', { className: "p-2 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg" },
-                      React.createElement(Star, { className: "text-white", size: 20 })
-                    ),
-                    React.createElement('div', {}, [
-                      React.createElement('p', { className: "text-slate-300 text-sm" }, "Questions"),
-                      React.createElement('p', { className: "text-white text-xl font-bold" }, `#${questionCount}`)
-                    ])
-                  ])
-                ])
-              ]),
+          const renderQuestion = () => {
+            if (currentQuestion.startsWith('FLAG:')) {
+              const parts = currentQuestion.split(':');
+              return (
+                <div className="flex flex-col items-center gap-6">
+                  <div className="text-8xl mb-4">{parts[1]}</div>
+                  <div className="text-2xl font-bold text-white">{parts[2]}</div>
+                </div>
+              );
+            }
+            return <h2 className="text-3xl font-bold text-white mb-8 text-center">{currentQuestion}</h2>;
+          };
 
-              showScoreAnimation && React.createElement('div', { 
-                className: "fixed inset-0 flex items-center justify-center z-50 pointer-events-none" 
-              }, 
-                React.createElement('div', { 
-                  className: `p-8 rounded-full ${lastAnswer ? 'bg-green-500' : 'bg-red-500'} animate-ping` 
-                },
-                  React.createElement(lastAnswer ? Check : X, { className: "text-white", size: 48 })
-                )
-              ),
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+              <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <h1 className="text-5xl font-bold text-white mb-4 flex items-center justify-center gap-4">
+                    <span className="text-6xl">🌍</span>
+                    Geography Bee Pro
+                  </h1>
+                  <p className="text-slate-300 text-lg">Master the world's geography!</p>
+                </div>
 
-              React.createElement('div', { className: "flex justify-center mb-8" }, 
-                React.createElement('div', { 
-                  className: "relative w-full max-w-3xl h-96 cursor-pointer group",
-                  onClick: handleCardClick,
-                  style: { perspective: '1000px' }
-                },
-                  React.createElement('div', { 
-                    className: `w-full h-full transition-transform duration-700 ${isFlipped ? 'transform rotate-y-180' : ''}`,
-                    style: { transformStyle: 'preserve-3d' }
-                  }, [
-                    React.createElement('div', { 
-                      className: "absolute inset-0 bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 flex flex-col justify-center items-center",
-                      style: { backfaceVisibility: 'hidden' }
-                    },
-                      React.createElement('div', { className: "text-center" }, [
-                        React.createElement('div', { className: "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg" }, [
-                          React.createElement(Star, { size: 16 }),
-                          `${difficulty.toUpperCase()} LEVEL`
-                        ]),
-                        currentQuestion.startsWith('FLAG_DISPLAY:') ? 
-                          React.createElement('div', { className: "flex flex-col items-center gap-6" }, [
-                            React.createElement('div', { 
-                              className: "text-9xl mb-4",
-                              style: { fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif' }
-                            }, currentQuestion.split(':')[1]),
-                            React.createElement('div', { className: "text-2xl font-bold text-white" }, currentQuestion.split(':')[2])
-                          ]) :
-                          React.createElement('h2', { className: "text-3xl font-bold text-white mb-8 leading-relaxed text-center" }, currentQuestion),
-                        React.createElement('div', { className: "flex items-center justify-center gap-2 text-slate-300" }, [
-                          React.createElement('div', { className: "w-2 h-2 bg-cyan-400 rounded-full animate-pulse" }),
-                          React.createElement('p', { className: "text-lg" }, "Click to reveal answer"),
-                          React.createElement('div', { className: "w-2 h-2 bg-cyan-400 rounded-full animate-pulse" })
-                        ])
-                      ])
-                    ),
-                    React.createElement('div', { 
-                      className: "absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-600/20 backdrop-blur-lg rounded-3xl border border-green-400/30 p-8 flex flex-col justify-center items-center transform rotate-y-180",
-                      style: { backfaceVisibility: 'hidden' }
-                    },
-                      React.createElement('div', { className: "text-center" }, [
-                        React.createElement('div', { className: "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6 bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg" }, [
-                          React.createElement(Award, { size: 16 }),
-                          "ANSWER"
-                        ]),
-                        React.createElement('h2', { className: "text-3xl font-bold text-white mb-8 leading-relaxed" }, currentAnswer),
-                        React.createElement('p', { className: "text-green-300 text-lg" }, "Rate your answer below")
-                      ])
-                    )
-                  ])
-                )
-              ),
+                {/* Score Dashboard */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg text-2xl">
+                        🎯
+                      </div>
+                      <div>
+                        <p className="text-slate-300 text-sm">Score</p>
+                        <p className="text-white text-xl font-bold">{score.correct}/{score.total}</p>
+                        <p className="text-green-400 text-xs">{getScorePercentage()}% Accuracy</p>
+                      </div>
+                    </div>
+                  </div>
 
-              React.createElement('div', { className: "flex flex-wrap justify-center gap-4" }, [
-                isFlipped ? [
-                  React.createElement('button', { 
-                    key: 'correct',
-                    onClick: () => markAnswer(true),
-                    className: "flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  }, [
-                    React.createElement(Check, { size: 24 }),
-                    "Got It Right!"
-                  ]),
-                  React.createElement('button', { 
-                    key: 'wrong',
-                    onClick: () => markAnswer(false),
-                    className: "flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  }, [
-                    React.createElement(X, { size: 24 }),
-                    "Missed It"
-                  ])
-                ] :
-                React.createElement('button', { 
-                  onClick: handleCardClick,
-                  className: "flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                }, [
-                  React.createElement(Award, { size: 24 }),
-                  "Reveal Answer"
-                ]),
-                React.createElement('button', { 
-                  onClick: generateQuestion,
-                  className: "flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-2xl font-bold text-lg border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
-                }, [
-                  React.createElement(RotateCcw, { size: 24 }),
-                  "Skip Question"
-                ])
-              ]),
+                  <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg text-2xl">
+                        ⚡
+                      </div>
+                      <div>
+                        <p className="text-slate-300 text-sm">Streak</p>
+                        <p className="text-white text-xl font-bold">{streak}</p>
+                        <p className="text-orange-400 text-xs">Best: {bestStreak}</p>
+                      </div>
+                    </div>
+                  </div>
 
-              React.createElement('div', { className: "mt-8 text-center" },
-                React.createElement('button', {
-                  onClick: resetScore,
-                  className: "px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-                }, "Reset Score")
-              )
-            ])
-          ]);
+                  <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg text-2xl">
+                        ⭐
+                      </div>
+                      <div>
+                        <p className="text-slate-300 text-sm">Questions</p>
+                        <p className="text-white text-xl font-bold">#{questionCount}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Score Animation */}
+                {showScoreAnimation && (
+                  <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                    <div className={`p-8 rounded-full ${lastAnswer ? 'bg-green-500' : 'bg-red-500'} text-6xl animate-ping`}>
+                      {lastAnswer ? '✅' : '❌'}
+                    </div>
+                  </div>
+                )}
+
+                {/* Main Card */}
+                <div className="flex justify-center mb-8">
+                  <div 
+                    className="relative w-full max-w-3xl h-96 cursor-pointer group"
+                    onClick={handleCardClick}
+                    style={{ perspective: '1000px' }}
+                  >
+                    <div 
+                      className={`w-full h-full transition-transform duration-700 ${isFlipped ? 'transform rotate-y-180' : ''}`}
+                      style={{ transformStyle: 'preserve-3d' }}
+                    >
+                      {/* Front of card (Question) */}
+                      <div 
+                        className="absolute inset-0 bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 flex flex-col justify-center items-center"
+                        style={{ backfaceVisibility: 'hidden' }}
+                      >
+                        <div className="text-center">
+                          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg">
+                            ⭐ {difficulty.toUpperCase()} LEVEL
+                          </div>
+                          {renderQuestion()}
+                          <div className="flex items-center justify-center gap-2 text-slate-300">
+                            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                            <p className="text-lg">Click to reveal answer</p>
+                            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Back of card (Answer) */}
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-600/20 backdrop-blur-lg rounded-3xl border border-green-400/30 p-8 flex flex-col justify-center items-center transform rotate-y-180"
+                        style={{ backfaceVisibility: 'hidden' }}
+                      >
+                        <div className="text-center">
+                          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6 bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg">
+                            🏆 ANSWER
+                          </div>
+                          <h2 className="text-3xl font-bold text-white mb-8">{currentAnswer}</h2>
+                          <p className="text-green-300 text-lg">Rate your answer below</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap justify-center gap-4">
+                  {isFlipped ? (
+                    <>
+                      <button 
+                        onClick={() => markAnswer(true)}
+                        className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      >
+                        ✅ Got It Right!
+                      </button>
+                      <button 
+                        onClick={() => markAnswer(false)}
+                        className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      >
+                        ❌ Missed It
+                      </button>
+                    </>
+                  ) : (
+                    <button 
+                      onClick={handleCardClick}
+                      className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    >
+                      🏆 Reveal Answer
+                    </button>
+                  )}
+                  
+                  <button 
+                    onClick={generateQuestion}
+                    className="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-2xl font-bold text-lg border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
+                  >
+                    🔄 Skip Question
+                  </button>
+                </div>
+
+                {/* Reset Button */}
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={resetScore}
+                    className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                  >
+                    🔄 Reset Score
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
         };
 
-        ReactDOM.render(React.createElement(GeographyBeeApp), document.getElementById('root'));
+        ReactDOM.render(<GeographyBeeApp />, document.getElementById('root'));
     </script>
     <style>
         .rotate-y-180 { transform: rotateY(180deg); }
