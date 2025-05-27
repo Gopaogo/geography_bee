@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geography Bee Pro</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        import React, { useState, useEffect } from 'react';
+import { Globe, RotateCcw, Settings, Trophy, Target, Star, Check, X, Award, Zap } from 'lucide-react';
+
+const GeographyBeeApp = () => {
+  const [currentQuestion, setCurrentQuestion] = useState('');
+  const [currentAnswer, setCurrentAnswer] = useState('');
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [difficulty, setDifficulty] = useState('medium');
+  const [showSettings, setShowSettings] = useState(false);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [lastAnswer, setLastAnswer] = useState(null);
+  const [showScoreAnimation, setShowScoreAnimation] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
+
+  const geoDatabase = {
+    countries: [
+      // North America
+      { name: 'United States', capital: 'Washington D.C.', continent: 'North America', population: '331 million', area: '9.8 million km²', flag: '🇺🇸', clue: 'Land of the free, home of the brave' },
+      { name: 'Canada', capital: 'Ottawa', continent: 'North America', population: '38 million', area: '9.98 million km²', flag: '🇨🇦', clue: 'Known for maple syrup and hockey' },
+      { name: 'Mexico', capital: 'Mexico City', continent: 'North America', population: '128 million', area: '1.96 million km²', flag: '🇲🇽', clue: 'Land of tacos and ancient Aztecs' },
+      { name: 'Guatemala', capital: 'Guatemala City', continent: 'North America', population: '17 million', area: '108,889 km²', flag: '🇬🇹', clue: 'Land of eternal spring and Maya ruins' },
+      { name: 'Cuba', capital: 'Havana', continent: 'North America', population: '11 million', area: '109,884 km²', flag: '🇨🇺', clue: 'Caribbean island known for cigars and salsa' },
+      { name: 'Jamaica', capital: 'Kingston', continent: 'North America', population: '3 million', area: '10,991 km²', flag: '🇯🇲', clue: 'Island home of reggae music' },
+      { name: 'Costa Rica', capital: 'San José', continent: 'North America', population: '5 million', area: '51,100 km²', flag: '🇨🇷', clue: 'No army, rich coast in Spanish' },
+      { name: 'Panama', capital: 'Panama City', continent: 'North America', population: '4 million', area: '75,420 km²', flag: '🇵🇦', clue: 'Famous canal connecting two oceans' },
+
+      // South America
+      { name: 'Brazil', capital: 'Brasília', continent: 'South America', population: '215 million', area: '8.5 million km²', flag: '🇧🇷', clue: 'Home to the Amazon rainforest' },
+      { name: 'Argentina', capital: 'Buenos Aires', continent: 'South America', population: '45 million', area: '2.78 million km²', flag: '🇦🇷', clue: 'Famous for tango and beef' },
+      { name: 'Chile', capital: 'Santiago', continent: 'South America', population: '19 million', area: '756,096 km²', flag: '🇨🇱', clue: 'Long, narrow country along Pacific coast' },
+      { name: 'Peru', capital: 'Lima', continent: 'South America', population: '33 million', area: '1.29 million km²', flag: '🇵🇪', clue: 'Home to Machu Picchu and Inca heritage' },
+      { name: 'Colombia', capital: 'Bogotá', continent: 'South America', population: '51 million', area: '1.14 million km²', flag: '🇨🇴', clue: 'Land of coffee and emeralds' },
+      { name: 'Venezuela', capital: 'Caracas', continent: 'South America', population: '28 million', area: '912,050 km²', flag: '🇻🇪', clue: 'Home to Angel Falls' },
+      { name: 'Ecuador', capital: 'Quito', continent: 'South America', population: '18 million', area: '283,561 km²', flag: '🇪🇨', clue: 'Named after the equator line' },
+      { name: 'Uruguay', capital: 'Montevideo', continent: 'South America', population: '3.5 million', area: '176,215 km²', flag: '🇺🇾', clue: 'Small country between Brazil and Argentina' },
+
+      // Europe
+      { name: 'Russia', capital: 'Moscow', continent: 'Europe/Asia', population: '146 million', area: '17.1 million km²', flag: '🇷🇺', clue: 'Largest country in the world' },
+      { name: 'Germany', capital: 'Berlin', continent: 'Europe', population: '83 million', area: '357,022 km²', flag: '🇩🇪', clue: 'Known for Oktoberfest and engineering' },
+      { name: 'United Kingdom', capital: 'London', continent: 'Europe', population: '67 million', area: '243,610 km²', flag: '🇬🇧', clue: 'Island nation with a royal family' },
+      { name: 'France', capital: 'Paris', continent: 'Europe', population: '68 million', area: '643,801 km²', flag: '🇫🇷', clue: 'City of Light and Eiffel Tower' },
+      { name: 'Italy', capital: 'Rome', continent: 'Europe', population: '60 million', area: '301,340 km²', flag: '🇮🇹', clue: 'Boot-shaped peninsula, home to pasta' },
+      { name: 'Spain', capital: 'Madrid', continent: 'Europe', population: '47 million', area: '505,370 km²', flag: '🇪🇸', clue: 'Iberian Peninsula, famous for flamenco' },
+      { name: 'Poland', capital: 'Warsaw', continent: 'Europe', population: '38 million', area: '312,696 km²', flag: '🇵🇱', clue: 'Eastern European country with rich history' },
+      { name: 'Netherlands', capital: 'Amsterdam', continent: 'Europe', population: '17.4 million', area: '41,543 km²', flag: '🇳🇱', clue: 'Land of tulips and windmills' },
+      { name: 'Belgium', capital: 'Brussels', continent: 'Europe', population: '11.5 million', area: '30,528 km²', flag: '🇧🇪', clue: 'Famous for waffles and chocolate' },
+      { name: 'Greece', capital: 'Athens', continent: 'Europe', population: '10.7 million', area: '131,957 km²', flag: '🇬🇷', clue: 'Birthplace of democracy and Olympics' },
+      { name: 'Sweden', capital: 'Stockholm', continent: 'Europe', population: '10.4 million', area: '450,295 km²', flag: '🇸🇪', clue: 'Land of Vikings and IKEA' },
+      { name: 'Norway', capital: 'Oslo', continent: 'Europe', population: '5.4 million', area: '385,207 km²', flag: '🇳🇴', clue: 'Land of fjords and midnight sun' },
+      { name: 'Switzerland', capital: 'Bern', continent: 'Europe', population: '8.7 million', area: '41,285 km²', flag: '🇨🇭', clue: 'Alpine nation famous for chocolate' },
+      { name: 'Austria', capital: 'Vienna', continent: 'Europe', population: '9.0 million', area: '83,879 km²', flag: '🇦🇹', clue: 'Land of Mozart and mountain music' },
+      { name: 'Ireland', capital: 'Dublin', continent: 'Europe', population: '5.0 million', area: '70,273 km²', flag: '🇮🇪', clue: 'Emerald Isle with shamrocks' },
+      { name: 'Portugal', capital: 'Lisbon', continent: 'Europe', population: '10.3 million', area: '92,090 km²', flag: '🇵🇹', clue: 'Age of exploration and port wine' },
+      { name: 'Czech Republic', capital: 'Prague', continent: 'Europe', population: '10.7 million', area: '78,867 km²', flag: '🇨🇿', clue: 'Bohemian kingdom with beautiful castles' },
+      { name: 'Hungary', capital: 'Budapest', continent: 'Europe', population: '9.7 million', area: '93,028 km²', flag: '🇭🇺', clue: 'Danube River and thermal baths' },
+      { name: 'Finland', capital: 'Helsinki', continent: 'Europe', population: '5.5 million', area: '338,424 km²', flag: '🇫🇮', clue: 'Land of thousand lakes and saunas' },
+      { name: 'Denmark', capital: 'Copenhagen', continent: 'Europe', population: '5.8 million', area: '43,094 km²', flag: '🇩🇰', clue: 'Home of LEGO and Vikings' },
+      { name: 'Ukraine', capital: 'Kyiv', continent: 'Europe', population: '44 million', area: '603,550 km²', flag: '🇺🇦', clue: 'Breadbasket of Europe' },
+
+      // Asia
+      { name: 'China', capital: 'Beijing', continent: 'Asia', population: '1.4 billion', area: '9.6 million km²', flag: '🇨🇳', clue: 'Great Wall and most populous country' },
+      { name: 'India', capital: 'New Delhi', continent: 'Asia', population: '1.4 billion', area: '3.29 million km²', flag: '🇮🇳', clue: 'Birthplace of yoga and spices' },
+      { name: 'Indonesia', capital: 'Jakarta', continent: 'Asia', population: '274 million', area: '1.90 million km²', flag: '🇮🇩', clue: 'Archipelago of 17,000 islands' },
+      { name: 'Japan', capital: 'Tokyo', continent: 'Asia', population: '125 million', area: '377,975 km²', flag: '🇯🇵', clue: 'Land of the Rising Sun' },
+      { name: 'Philippines', capital: 'Manila', continent: 'Asia', population: '110 million', area: '300,000 km²', flag: '🇵🇭', clue: 'Pearl of the Orient Seas' },
+      { name: 'Vietnam', capital: 'Hanoi', continent: 'Asia', population: '98 million', area: '331,212 km²', flag: '🇻🇳', clue: 'S-shaped country in Southeast Asia' },
+      { name: 'Turkey', capital: 'Ankara', continent: 'Europe/Asia', population: '84 million', area: '783,562 km²', flag: '🇹🇷', clue: 'Bridge between Europe and Asia' },
+      { name: 'Iran', capital: 'Tehran', continent: 'Asia', population: '85 million', area: '1.65 million km²', flag: '🇮🇷', clue: 'Ancient Persia, land of poetry' },
+      { name: 'Thailand', capital: 'Bangkok', continent: 'Asia', population: '70 million', area: '513,120 km²', flag: '🇹🇭', clue: 'Land of Smiles in Southeast Asia' },
+      { name: 'South Korea', capital: 'Seoul', continent: 'Asia', population: '52 million', area: '100,210 km²', flag: '🇰🇷', clue: 'K-pop and advanced technology' },
+      { name: 'Saudi Arabia', capital: 'Riyadh', continent: 'Asia', population: '35 million', area: '2.15 million km²', flag: '🇸🇦', clue: 'Birthplace of Islam, desert kingdom' },
+      { name: 'Israel', capital: 'Jerusalem', continent: 'Asia', population: '9.5 million', area: '20,770 km²', flag: '🇮🇱', clue: 'Holy Land of three religions' },
+      { name: 'Singapore', capital: 'Singapore', continent: 'Asia', population: '5.9 million', area: '719 km²', flag: '🇸🇬', clue: 'Lion City, modern city-state' },
+      { name: 'Malaysia', capital: 'Kuala Lumpur', continent: 'Asia', population: '33 million', area: '330,803 km²', flag: '🇲🇾', clue: 'Truly Asia, multicultural nation' },
+      { name: 'Pakistan', capital: 'Islamabad', continent: 'Asia', population: '230 million', area: '881,913 km²', flag: '🇵🇰', clue: 'Land of pure, created in 1947' },
+      { name: 'Bangladesh', capital: 'Dhaka', continent: 'Asia', population: '166 million', area: '147,570 km²', flag: '🇧🇩', clue: 'Bengal tiger and river deltas' },
+
+      // Africa
+      { name: 'Nigeria', capital: 'Abuja', continent: 'Africa', population: '218 million', area: '923,768 km²', flag: '🇳🇬', clue: 'Giant of Africa, oil-rich nation' },
+      { name: 'Ethiopia', capital: 'Addis Ababa', continent: 'Africa', population: '118 million', area: '1.1 million km²', flag: '🇪🇹', clue: 'Never colonized, birthplace of coffee' },
+      { name: 'Egypt', capital: 'Cairo', continent: 'Africa', population: '104 million', area: '1.00 million km²', flag: '🇪🇬', clue: 'Land of pyramids and pharaohs' },
+      { name: 'South Africa', capital: 'Cape Town', continent: 'Africa', population: '60 million', area: '1.22 million km²', flag: '🇿🇦', clue: 'Rainbow Nation with three capitals' },
+      { name: 'Kenya', capital: 'Nairobi', continent: 'Africa', population: '54 million', area: '580,367 km²', flag: '🇰🇪', clue: 'Safari capital of East Africa' },
+      { name: 'Morocco', capital: 'Rabat', continent: 'Africa', population: '37 million', area: '446,550 km²', flag: '🇲🇦', clue: 'Gateway to Africa from Europe' },
+      { name: 'Ghana', capital: 'Accra', continent: 'Africa', population: '32 million', area: '238,533 km²', flag: '🇬🇭', clue: 'Gold Coast, first African country to gain independence' },
+      { name: 'Algeria', capital: 'Algiers', continent: 'Africa', population: '44 million', area: '2.38 million km²', flag: '🇩🇿', clue: 'Largest country in Africa' },
+      { name: 'Tanzania', capital: 'Dodoma', continent: 'Africa', population: '61 million', area: '947,303 km²', flag: '🇹🇿', clue: 'Serengeti and Mount Kilimanjaro' },
+      { name: 'Uganda', capital: 'Kampala', continent: 'Africa', population: '47 million', area: '241,038 km²', flag: '🇺🇬', clue: 'Pearl of Africa, source of Nile' },
+
+      // Oceania
+      { name: 'Australia', capital: 'Canberra', continent: 'Oceania', population: '26 million', area: '7.69 million km²', flag: '🇦🇺', clue: 'Home to kangaroos and koalas' },
+      { name: 'New Zealand', capital: 'Wellington', continent: 'Oceania', population: '5.1 million', area: '268,021 km²', flag: '🇳🇿', clue: 'Land of the Long White Cloud' },
+      { name: 'Fiji', capital: 'Suva', continent: 'Oceania', population: '0.9 million', area: '18,274 km²', flag: '🇫🇯', clue: 'Tropical paradise in the Pacific' },
+      { name: 'Papua New Guinea', capital: 'Port Moresby', continent: 'Oceania', population: '9 million', area: '462,840 km²', flag: '🇵🇬', clue: 'Eastern half of New Guinea island' }
+    ],
+    
+    cities: [
+      // Major World Cities
+      { name: 'Tokyo', country: 'Japan', population: '37.4 million', region: 'Asia', clue: 'Largest metropolitan area in the world' },
+      { name: 'Delhi', country: 'India', population: '32.9 million', region: 'Asia', clue: 'Ancient and modern India combined' },
+      { name: 'Shanghai', country: 'China', population: '27.1 million', region: 'Asia', clue: 'Pearl of the Orient, modern skyline' },
+      { name: 'São Paulo', country: 'Brazil', population: '22.4 million', region: 'South America', clue: 'Largest city in the Southern Hemisphere' },
+      { name: 'Mexico City', country: 'Mexico', population: '21.8 million', region: 'North America', clue: 'One of the world\'s largest metropolitan areas' },
+      { name: 'Cairo', country: 'Egypt', population: '20.9 million', region: 'Africa', clue: 'Near the Great Pyramids of Giza' },
+      { name: 'Mumbai', country: 'India', population: '20.4 million', region: 'Asia', clue: 'Bollywood capital of India' },
+      { name: 'Beijing', country: 'China', population: '21.5 million', region: 'Asia', clue: 'Forbidden City and Great Wall nearby' },
+      { name: 'Osaka', country: 'Japan', population: '19.3 million', region: 'Asia', clue: 'Kitchen of Japan, street food paradise' },
+      { name: 'New York City', country: 'United States', population: '8.3 million', region: 'North America', clue: 'The Big Apple, never sleeps' },
+      { name: 'London', country: 'United Kingdom', population: '9.0 million', region: 'Europe', clue: 'Home to Big Ben and the Thames' },
+      { name: 'Paris', country: 'France', population: '2.1 million', region: 'Europe', clue: 'City of Light with the Eiffel Tower' },
+      { name: 'Istanbul', country: 'Turkey', population: '15.5 million', region: 'Europe/Asia', clue: 'Former Constantinople, spans two continents' },
+      { name: 'Buenos Aires', country: 'Argentina', population: '15.2 million', region: 'South America', clue: 'Paris of South America, tango birthplace' },
+      { name: 'Lagos', country: 'Nigeria', population: '15.4 million', region: 'Africa', clue: 'Economic powerhouse of West Africa' },
+      { name: 'Rio de Janeiro', country: 'Brazil', population: '13.0 million', region: 'South America', clue: 'Marvelous City with Christ the Redeemer' },
+      { name: 'Manila', country: 'Philippines', population: '13.5 million', region: 'Asia', clue: 'Pearl of the Orient, Spanish colonial heritage' },
+      { name: 'Moscow', country: 'Russia', population: '12.5 million', region: 'Europe/Asia', clue: 'Red Square and Kremlin' },
+      { name: 'Los Angeles', country: 'United States', population: '3.9 million', region: 'North America', clue: 'City of Angels, Hollywood capital' },
+      { name: 'Chicago', country: 'United States', population: '2.7 million', region: 'North America', clue: 'Windy City by Lake Michigan' },
+      { name: 'Toronto', country: 'Canada', population: '2.9 million', region: 'North America', clue: 'Canada\'s largest city' },
+      { name: 'Berlin', country: 'Germany', population: '3.7 million', region: 'Europe', clue: 'Once divided by a famous wall' },
+      { name: 'Madrid', country: 'Spain', population: '3.3 million', region: 'Europe', clue: 'Heart of Spain, royal palaces' },
+      { name: 'Rome', country: 'Italy', population: '2.9 million', region: 'Europe', clue: 'Eternal City with ancient Colosseum' },
+      { name: 'Bangkok', country: 'Thailand', population: '10.5 million', region: 'Asia', clue: 'Venice of the East, golden temples' },
+      { name: 'Jakarta', country: 'Indonesia', population: '10.6 million', region: 'Asia', clue: 'Largest city in Southeast Asia' },
+      { name: 'Seoul', country: 'South Korea', population: '9.7 million', region: 'Asia', clue: 'K-pop capital, high-tech metropolis' },
+      { name: 'Lima', country: 'Peru', population: '10.9 million', region: 'South America', clue: 'City of Kings near ancient Inca lands' },
+      { name: 'Bogotá', country: 'Colombia', population: '11.3 million', region: 'South America', clue: 'High-altitude capital in the Andes' },
+      { name: 'Sydney', country: 'Australia', population: '5.3 million', region: 'Oceania', clue: 'Famous for its Opera House' },
+      { name: 'Melbourne', country: 'Australia', population: '5.2 million', region: 'Oceania', clue: 'Cultural capital of Australia' },
+      { name: 'Johannesburg', country: 'South Africa', population: '5.6 million', region: 'Africa', clue: 'City of Gold, economic hub' },
+      { name: 'Nairobi', country: 'Kenya', population: '4.9 million', region: 'Africa', clue: 'Safari capital of East Africa' },
+      { name: 'Casablanca', country: 'Morocco', population: '3.4 million', region: 'Africa', clue: 'White City, economic capital' },
+      { name: 'Addis Ababa', country: 'Ethiopia', population: '5.2 million', region: 'Africa', clue: 'New Flower, diplomatic capital of Africa' },
+      { name: 'Accra', country: 'Ghana', population: '2.5 million', region: 'Africa', clue: 'Gateway to West Africa' },
+      { name: 'Auckland', country: 'New Zealand', population: '1.7 million', region: 'Oceania', clue: 'City of Sails, largest in New Zealand' },
+      { name: 'Vancouver', country: 'Canada', population: '675,000', region: 'North America', clue: 'Beautiful coastal city in British Columbia' },
+      { name: 'Montreal', country: 'Canada', population: '1.8 million', region: 'North America', clue: 'French-speaking Canadian metropolis' },
+      { name: 'Barcelona', country: 'Spain', population: '1.6 million', region: 'Europe', clue: 'Gaudí\'s architectural masterpieces' },
+      { name: 'Amsterdam', country: 'Netherlands', population: '873,000', region: 'Europe', clue: 'Venice of the North with canals' },
+      { name: 'Vienna', country: 'Austria', population: '1.9 million', region: 'Europe', clue: 'City of Music, Mozart\'s home' },
+      { name: 'Prague', country: 'Czech Republic', population: '1.3 million', region: 'Europe', clue: 'Golden City with fairy-tale castles' },
+      { name: 'Warsaw', country: 'Poland', population: '1.8 million', region: 'Europe', clue: 'Phoenix city, rebuilt after WWII' },
+      { name: 'Budapest', country: 'Hungary', population: '1.8 million', region: 'Europe', clue: 'Pearl of the Danube' },
+      { name: 'Athens', country: 'Greece', population: '3.2 million', region: 'Europe', clue: 'Cradle of democracy and philosophy' },
+      { name: 'Stockholm', country: 'Sweden', population: '975,000', region: 'Europe', clue: 'Venice of the North, Nobel Prize city' },
+      { name: 'Copenhagen', country: 'Denmark', population: '660,000', region: 'Europe', clue: 'Little Mermaid and colorful Nyhavn' },
+      { name: 'Oslo', country: 'Norway', population: '695,000', region: 'Europe', clue: 'Gateway to Norwegian fjords' },
+      { name: 'Helsinki', country: 'Finland', population: '658,000', region: 'Europe', clue: 'Daughter of the Baltic Sea' },
+      { name: 'Tehran', country: 'Iran', population: '9.0 million', region: 'Asia', clue: 'Ancient Persian capital in mountains' },
+      { name: 'Baghdad', country: 'Iraq', population: '7.0 million', region: 'Asia', clue: 'Ancient Mesopotamian capital' },
+      { name: 'Riyadh', country: 'Saudi Arabia', population: '7.6 million', region: 'Asia', clue: 'Desert capital of oil kingdom' },
+      { name: 'Dhaka', country: 'Bangladesh', population: '9.0 million', region: 'Asia', clue: 'Venice of the East, rickshaw capital' },
+      { name: 'Karachi', country: 'Pakistan', population: '15.4 million', region: 'Asia', clue: 'Largest city in Pakistan, Arabian Sea port' },
+      { name: 'Kolkata', country: 'India', population: '15.0 million', region: 'Asia', clue: 'City of Joy, cultural capital of India' },
+      { name: 'Bangalore', country: 'India', population: '13.2 million', region: 'Asia', clue: 'Silicon Valley of India' },
+      { name: 'Chennai', country: 'India', population: '10.9 million', region: 'Asia', clue: 'Detroit of India, Tamil culture' },
+      { name: 'Hyderabad', country: 'India', population: '10.0 million', region: 'Asia', clue: 'Cyberabad, biryani capital' },
+      { name: 'Ho Chi Minh City', country: 'Vietnam', population: '9.0 million', region: 'Asia', clue: 'Former Saigon, economic hub of Vietnam' },
+      { name: 'Hanoi', country: 'Vietnam', population: '8.1 million', region: 'Asia', clue: 'Capital of Vietnam, French colonial charm' },
+      { name: 'Kuala Lumpur', country: 'Malaysia', population: '8.2 million', region: 'Asia', clue: 'Muddy confluence, Petronas Towers' },
+      { name: 'Hong Kong', country: 'China', population: '7.5 million', region: 'Asia', clue: 'Fragrant Harbor, financial center' }
+    ],
+    
+    features: [
+      // Mountains
+      { name: 'Mount Everest', type: 'Mountain', location: 'Nepal/China border', height: '8,849 meters', description: 'Highest mountain in the world', rank: '1st tallest', clue: 'Located in the Himalayas, ultimate climbing challenge' },
+      { name: 'K2', type: 'Mountain', location: 'Pakistan/China border', height: '8,611 meters', description: 'Second highest mountain in the world', rank: '2nd tallest', clue: 'Known as the Savage Mountain, extremely dangerous to climb' },
+      { name: 'Kangchenjunga', type: 'Mountain', location: 'Nepal/India border', height: '8,586 meters', description: 'Third highest mountain in the world', rank: '3rd tallest', clue: 'Sacred mountain in Himalayan region' },
+      { name: 'Denali', type: 'Mountain', location: 'Alaska, USA', height: '6,190 meters', description: 'Highest mountain in North America', rank: '1st tallest in North America', clue: 'Formerly known as Mount McKinley' },
+      { name: 'Mount Kilimanjaro', type: 'Mountain', location: 'Tanzania', height: '5,895 meters', description: 'Highest mountain in Africa', rank: '1st tallest in Africa', clue: 'Snow-capped peak near the equator' },
+      
+      // Rivers
+      { name: 'Amazon River', type: 'River', location: 'South America', length: '6,400 km', description: 'Longest river in the world', rank: '1st longest', clue: 'Flows through the world\'s largest rainforest' },
+      { name: 'Nile River', type: 'River', location: 'Northeast Africa', length: '6,650 km', description: 'Longest river in Africa', rank: '2nd longest', clue: 'Cradle of ancient Egyptian civilization' },
+      { name: 'Yangtze River', type: 'River', location: 'China', length: '6,300 km', description: 'Longest river in Asia', rank: '3rd longest', clue: 'Flows through the heart of China' },
+      { name: 'Mississippi River', type: 'River', location: 'United States', length: '6,275 km', description: 'Longest river in North America', rank: '4th longest', clue: 'Mighty river dividing eastern and western USA' },
+      { name: 'Congo River', type: 'River', location: 'Central Africa', length: '4,700 km', description: 'Deepest river in the world', rank: '9th longest', clue: 'Heart of African rainforest' },
+      
+      // Oceans
+      { name: 'Pacific Ocean', type: 'Ocean', location: 'Global', area: '165 million km²', description: 'Largest ocean in the world', rank: '1st largest', clue: 'Ring of Fire surrounds this vast ocean' },
+      { name: 'Atlantic Ocean', type: 'Ocean', location: 'Global', area: '85 million km²', description: 'Second largest ocean', rank: '2nd largest', clue: 'Separates Americas from Europe and Africa' },
+      { name: 'Indian Ocean', type: 'Ocean', location: 'Global', area: '73 million km²', description: 'Third largest ocean', rank: '3rd largest', clue: 'Bordered by Africa, Asia, and Australia' },
+      { name: 'Arctic Ocean', type: 'Ocean', location: 'Arctic', area: '14 million km²', description: 'Smallest ocean', rank: '5th largest', clue: 'Frozen ocean at North Pole' },
+      
+      // Deserts
+      { name: 'Sahara Desert', type: 'Desert', location: 'North Africa', area: '9 million km²', description: 'Largest hot desert in the world', rank: '1st largest hot desert', clue: 'Covers most of North Africa' },
+      { name: 'Arabian Desert', type: 'Desert', location: 'Middle East', area: '2.3 million km²', description: 'Second largest hot desert', rank: '2nd largest hot desert', clue: 'Covers most of Arabian Peninsula' },
+      { name: 'Gobi Desert', type: 'Desert', location: 'Asia', area: '1.3 million km²', description: 'Large cold desert', rank: '5th largest desert', clue: 'Cold desert between China and Mongolia' },
+      { name: 'Atacama Desert', type: 'Desert', location: 'South America', area: '105,000 km²', description: 'Driest non-polar desert in the world', rank: 'Driest desert', clue: 'Between Pacific Ocean and Andes Mountains' },
+      
+      // Lakes
+      { name: 'Caspian Sea', type: 'Lake', location: 'Europe/Asia', area: '371,000 km²', description: 'Largest enclosed inland body of water', rank: '1st largest lake', clue: 'Technically a lake, not a sea' },
+      { name: 'Lake Superior', type: 'Lake', location: 'North America', area: '82,100 km²', description: 'Largest of the Great Lakes', rank: '1st largest Great Lake', clue: 'Shared between USA and Canada' },
+      { name: 'Lake Victoria', type: 'Lake', location: 'East Africa', area: '68,870 km²', description: 'Largest lake in Africa', rank: '1st largest in Africa', clue: 'Source of the White Nile' },
+      { name: 'Lake Baikal', type: 'Lake', location: 'Russia', depth: '1,642 meters', description: 'Deepest freshwater lake in the world', rank: '1st deepest', clue: 'Contains 20% of world\'s fresh water' },
+      
+      // Other Features
+      { name: 'Great Barrier Reef', type: 'Coral Reef', location: 'Australia', length: '2,300 km', description: 'Largest coral reef system in the world', rank: '1st largest reef', clue: 'Visible from space, off Queensland coast' },
+      { name: 'Grand Canyon', type: 'Canyon', location: 'United States', depth: '1,857 meters', description: 'Famous canyon carved by the Colorado River', rank: 'Most famous canyon', clue: 'One of Seven Natural Wonders of the World' },
+      { name: 'Angel Falls', type: 'Waterfall', location: 'Venezuela', height: '979 meters', description: 'Highest uninterrupted waterfall in the world', rank: '1st tallest', clue: 'Located in remote Venezuelan jungle' },
+      { name: 'Victoria Falls', type: 'Waterfall', location: 'Zambia/Zimbabwe', height: '108 meters', description: 'One of the largest waterfalls in the world', rank: 'Largest by volume', clue: 'The smoke that thunders' },
+      { name: 'Amazon Rainforest', type: 'Rainforest', location: 'South America', area: '5.5 million km²', description: 'Largest tropical rainforest in the world', rank: '1st largest rainforest', clue: 'Lungs of the Earth' },
+      { name: 'Himalayas', type: 'Mountain Range', location: 'Asia', description: 'Highest mountain range in the world', rank: '1st highest range', clue: 'Home to Mount Everest and K2' },
+      { name: 'Andes', type: 'Mountain Range', location: 'South America', length: '7,000 km', description: 'Longest mountain range in the world', rank: '1st longest range', clue: 'Spine of South America' }
+    ]
+  };
+
+  const questionTemplates = {
+    easy: [
+      (data) => data.capital ? { q: `What is the capital of ${data.name}?`, a: data.capital } : null,
+      (data) => data.continent ? { q: `On which continent is ${data.name} located?`, a: data.continent } : null,
+      (data) => data.country ? { q: `In which country is ${data.name} located?`, a: data.country } : null,
+      (data) => data.type ? { q: `What type of geographical feature is ${data.name}?`, a: data.type } : null,
+      (data) => data.flag ? { q: `FLAG_DISPLAY:${data.flag}:Which country does this flag represent?`, a: data.name } : null
+    ],
+    medium: [
+      (data) => data.capital && data.continent ? { q: `Which continent contains ${data.name}, and what is its capital city?`, a: `${data.continent}, capital: ${data.capital}` } : null,
+      (data) => data.description ? { q: `${data.name} is a ${data.type}. What makes it significant?`, a: data.description } : null,
+      (data) => data.clue && data.capital ? { q: `Clue: ${data.clue}. What is the capital of this country?`, a: `${data.capital} (${data.name})` } : null,
+      (data) => data.rank ? { q: `What is the ${data.rank} ${data.type.toLowerCase()} in the world?`, a: data.name } : null
+    ],
+    hard: [
+      (data) => data.clue && data.rank && data.location ? { q: `Clue: Located in ${data.location}, this is the ${data.rank} ${data.type.toLowerCase()} in the world. ${data.clue}`, a: data.name } : null,
+      (data) => data.flag && data.clue ? { q: `FLAG_DISPLAY:${data.flag}:Clue: ${data.clue}. Which country is this?`, a: data.name } : null,
+      (data) => data.description && data.type ? { q: `Explain the geographical significance of ${data.name} and its impact on the surrounding region.`, a: `${data.description} This ${data.type} significantly affects regional climate, trade routes, biodiversity, and human settlement patterns.` } : null
+    ]
+  };
+
+  const generateQuestion = () => {
+    const templates = questionTemplates[difficulty];
+    const allData = [...geoDatabase.countries, ...geoDatabase.cities, ...geoDatabase.features];
+    
+    const generateRankingQuestion = () => {
+      const rankingQuestions = [
+        { q: "What is the tallest mountain in the world?", a: "Mount Everest (8,849 meters)" },
+        { q: "What is the second tallest mountain in the world?", a: "K2 (8,611 meters)" },
+        { q: "What is the third tallest mountain in the world?", a: "Kangchenjunga (8,586 meters)" },
+        { q: "What is the longest river in the world?", a: "Amazon River (6,400 km)" },
+        { q: "What is the second longest river in the world?", a: "Nile River (6,650 km)" },
+        { q: "What is the largest ocean in the world?", a: "Pacific Ocean (165 million km²)" },
+        { q: "What is the second largest ocean in the world?", a: "Atlantic Ocean (85 million km²)" },
+        { q: "What is the largest hot desert in the world?", a: "Sahara Desert (9 million km²)" },
+        { q: "What is the deepest lake in the world?", a: "Lake Baikal (1,642 meters deep)" },
+        { q: "What is the highest waterfall in the world?", a: "Angel Falls (979 meters)" }
+      ];
+      return rankingQuestions[Math.floor(Math.random() * rankingQuestions.length)];
+    };
+    
+    const generateFlagQuestion = () => {
+      const countries = geoDatabase.countries.filter(c => c.flag);
+      if (countries.length === 0) return null;
+      const country = countries[Math.floor(Math.random() * countries.length)];
+      return { 
+        q: `FLAG_DISPLAY:${country.flag}:Which country does this flag represent?`, 
+        a: country.name 
+      };
+    };
+    
+    const generateClueQuestion = () => {
+      const dataWithClues = [...geoDatabase.countries, ...geoDatabase.cities, ...geoDatabase.features].filter(item => item.clue);
+      if (dataWithClues.length === 0) return null;
+      const selected = dataWithClues[Math.floor(Math.random() * dataWithClues.length)];
+      
+      if (selected.capital) {
+        return { q: `Clue: ${selected.clue}. What country is this?`, a: selected.name };
+      } else if (selected.country) {
+        return { q: `Clue: ${selected.clue}. What city is this?`, a: selected.name };
+      } else {
+        return { q: `Clue: ${selected.clue}. What geographical feature is this?`, a: selected.name };
+      }
+    };
+    
+    let result = null;
+    let attempts = 0;
+    
+    while (!result && attempts < 50) {
+      const randomType = Math.random();
+      
+      if (randomType < 0.25) {
+        result = generateRankingQuestion();
+      } else if (randomType < 0.5) {
+        result = generateFlagQuestion();
+      } else if (randomType < 0.75) {
+        result = generateClueQuestion();
+      }
+      
+      if (!result) {
+        const template = templates[Math.floor(Math.random() * templates.length)];
+        const selectedData = allData[Math.floor(Math.random() * allData.length)];
+        result = template(selectedData);
+      }
+      attempts++;
+    }
+    
+    if (!result) {
+      result = { q: `What is the capital of ${geoDatabase.countries[0].name}?`, a: geoDatabase.countries[0].capital };
+    }
+    
+    setCurrentQuestion(result.q);
+    setCurrentAnswer(result.a);
+    setIsFlipped(false);
+    setQuestionCount(prev => prev + 1);
+  };
+
+  const handleCardClick = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  const markAnswer = (isCorrect) => {
+    setScore(prev => ({
+      correct: prev.correct + (isCorrect ? 1 : 0),
+      total: prev.total + 1
+    }));
+    
+    setLastAnswer(isCorrect);
+    setShowScoreAnimation(true);
+    
+    if (isCorrect) {
+      setStreak(prev => {
+        const newStreak = prev + 1;
+        if (newStreak > bestStreak) {
+          setBestStreak(newStreak);
+        }
+        return newStreak;
+      });
+    } else {
+      setStreak(0);
+    }
+    
+    // Clear current question and answer immediately to prevent flash
+    setCurrentQuestion('');
+    setCurrentAnswer('');
+    
+    setTimeout(() => {
+      setShowScoreAnimation(false);
+      generateQuestion();
+    }, 1500);
+  };
+
+  const resetScore = () => {
+    setScore({ correct: 0, total: 0 });
+    setStreak(0);
+    setQuestionCount(0);
+    setLastAnswer(null);
+  };
+
+  const getScorePercentage = () => {
+    return score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
+  };
+
+  const getDifficultyColor = () => {
+    switch(difficulty) {
+      case 'easy': return 'from-green-400 to-green-600';
+      case 'medium': return 'from-yellow-400 to-orange-500';
+      case 'hard': return 'from-red-400 to-red-600';
+      default: return 'from-blue-400 to-blue-600';
+    }
+  };
+
+  useEffect(() => {
+    generateQuestion();
+  }, [difficulty]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-4 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-1/2 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-4 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-2000"></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold text-white mb-4 flex items-center justify-center gap-4">
+            <div className="p-3 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full">
+              <Globe className="text-white" size={40} />
+            </div>
+            Geography Bee Pro
+          </h1>
+          <p className="text-slate-300 text-lg">Master the world's geography with style</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg">
+                <Target className="text-white" size={20} />
+              </div>
+              <div>
+                <p className="text-slate-300 text-sm">Score</p>
+                <p className="text-white text-xl font-bold">{score.correct}/{score.total}</p>
+                <p className="text-green-400 text-xs">{getScorePercentage()}% Accuracy</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg">
+                <Zap className="text-white" size={20} />
+              </div>
+              <div>
+                <p className="text-slate-300 text-sm">Streak</p>
+                <p className="text-white text-xl font-bold">{streak}</p>
+                <p className="text-orange-400 text-xs">Best: {bestStreak}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg">
+                <Star className="text-white" size={20} />
+              </div>
+              <div>
+                <p className="text-slate-300 text-sm">Questions</p>
+                <p className="text-white text-xl font-bold">#{questionCount}</p>
+                <p className="text-purple-400 text-xs capitalize">{difficulty} Level</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="flex items-center gap-3 w-full"
+            >
+              <div className="p-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg">
+                <Settings className="text-white" size={20} />
+              </div>
+              <div className="text-left">
+                <p className="text-slate-300 text-sm">Settings</p>
+                <p className="text-white text-sm">Configure</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {showSettings && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20">
+            <h3 className="text-white text-xl font-bold mb-6 flex items-center gap-2">
+              <Settings size={24} />
+              Game Settings
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-white text-lg font-semibold mb-4">Difficulty Level</h4>
+                <div className="space-y-3">
+                  {['easy', 'medium', 'hard'].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setDifficulty(level)}
+                      className={`w-full p-4 rounded-xl transition-all duration-300 capitalize font-medium ${
+                        difficulty === level
+                          ? `bg-gradient-to-r ${getDifficultyColor()} text-white shadow-lg transform scale-105`
+                          : 'bg-white/10 text-slate-300 hover:bg-white/20 border border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg">{level}</span>
+                        {difficulty === level && <Check size={20} />}
+                      </div>
+                      <p className="text-sm mt-1 opacity-80">
+                        {level === 'easy' && 'Basic capitals and locations'}
+                        {level === 'medium' && 'Clues and rankings'}
+                        {level === 'hard' && 'Complex analysis questions'}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-white text-lg font-semibold mb-4">Score Management</h4>
+                <button
+                  onClick={resetScore}
+                  className="w-full p-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <RotateCcw size={20} />
+                    Reset Score
+                  </div>
+                </button>
+                
+                <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-slate-300 text-sm mb-2">Database Info:</p>
+                  <p className="text-white text-sm">
+                    {geoDatabase.countries.length} Countries • {geoDatabase.cities.length} Cities • {geoDatabase.features.length} Features
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showScoreAnimation && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+            <div className={`p-8 rounded-full ${lastAnswer ? 'bg-green-500' : 'bg-red-500'} animate-ping`}>
+              {lastAnswer ? <Check className="text-white" size={48} /> : <X className="text-white" size={48} />}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-center mb-8">
+          <div
+            className="relative w-full max-w-3xl h-96 cursor-pointer group"
+            onClick={handleCardClick}
+            style={{ perspective: '1000px' }}
+          >
+            <div className={`w-full h-full transition-transform duration-700 ${isFlipped ? 'transform rotate-y-180' : ''}`}
+                 style={{ transformStyle: 'preserve-3d' }}>
+              
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 p-8 flex flex-col justify-center items-center group-hover:shadow-2xl transition-all duration-300"
+                   style={{ backfaceVisibility: 'hidden' }}>
+                <div className="text-center">
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6 bg-gradient-to-r ${getDifficultyColor()} text-white shadow-lg`}>
+                    <Star size={16} />
+                    {difficulty.toUpperCase()} LEVEL
+                  </div>
+                  {currentQuestion.startsWith('FLAG_DISPLAY:') ? (
+                    <div className="flex flex-col items-center gap-6">
+                      <div className="text-9xl mb-4" style={{ fontFamily: 'Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif' }}>
+                        {currentQuestion.split(':')[1]}
+                      </div>
+                      <div className="text-2xl font-bold text-white">
+                        {currentQuestion.split(':')[2]}
+                      </div>
+                    </div>
+                  ) : (
+                    <h2 className="text-3xl font-bold text-white mb-8 leading-relaxed whitespace-pre-line text-center">
+                      {currentQuestion}
+                    </h2>
+                  )}
+                  <div className="flex items-center justify-center gap-2 text-slate-300">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                    <p className="text-lg">Click to reveal answer</p>
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-500"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-600/20 backdrop-blur-lg rounded-3xl border border-green-400/30 p-8 flex flex-col justify-center items-center transform rotate-y-180"
+                   style={{ backfaceVisibility: 'hidden' }}>
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6 bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg">
+                    <Award size={16} />
+                    ANSWER
+                  </div>
+                  <h2 className="text-3xl font-bold text-white mb-8 leading-relaxed">
+                    {currentAnswer}
+                  </h2>
+                  <div className="flex items-center justify-center gap-2 text-green-300">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <p className="text-lg">Rate your answer below</p>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse delay-500"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-4">
+          {isFlipped ? (
+            <>
+              <button
+                onClick={() => markAnswer(true)}
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                <Check size={24} />
+                Got It Right!
+              </button>
+              <button
+                onClick={() => markAnswer(false)}
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                <X size={24} />
+                Missed It
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleCardClick}
+              className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <Award size={24} />
+              Reveal Answer
+            </button>
+          )}
+          
+          <button
+            onClick={generateQuestion}
+            className="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-lg text-white rounded-2xl font-bold text-lg border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
+          >
+            <RotateCcw size={24} />
+            Skip Question
+          </button>
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .rotate-y-180 {
+            transform: rotateY(180deg);
+          }
+          @keyframes ping {
+            75%, 100% {
+              transform: scale(2);
+              opacity: 0;
+            }
+          }
+        `
+      }} />
+    </div>
+  );
+};
+
+export default GeographyBeeApp;
+        // (Copy everything from the artifact above, starting with "import React...")
+    </script>
+    <script type="text/babel">
+        ReactDOM.render(React.createElement(GeographyBeeApp), document.getElementById('root'));
+    </script>
+</body>
+</html>
